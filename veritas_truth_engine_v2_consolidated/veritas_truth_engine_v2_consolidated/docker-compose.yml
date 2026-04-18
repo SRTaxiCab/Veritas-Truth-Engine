@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: veritas_truth_engine
+      POSTGRES_USER: veritas
+      POSTGRES_PASSWORD: veritas_local_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - veritas-postgres:/var/lib/postgresql/data
+      - ./sql/schema_enterprise.sql:/docker-entrypoint-initdb.d/001_schema_enterprise.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritas -d veritas_truth_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  app:
+    build: .
+    environment:
+      PORT: 3017
+      VERITAS_REPOSITORY: postgres
+      DATABASE_URL: postgres://veritas:veritas_local_password@postgres:5432/veritas_truth_engine
+      PGSSL: disable
+      VERITAS_MAX_BODY_BYTES: 1000000
+    ports:
+      - "3017:3017"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3017/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  veritas-postgres:

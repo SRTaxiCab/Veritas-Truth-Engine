@@ -1,0 +1,10 @@
+node_modules
+dist
+data
+artifacts
+*.log
+*.png
+.env
+.env.*
+!.env.example
+npm-debug.log*

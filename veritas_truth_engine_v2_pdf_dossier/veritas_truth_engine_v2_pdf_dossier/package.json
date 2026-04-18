@@ -1,0 +1,29 @@
+{
+  "name": "veritas-truth-engine-v2-pdf-dossier",
+  "version": "2.7.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "demo": "tsx src/examples/demo.ts",
+    "dev:ui": "tsx src/examples/server.ts",
+    "db:test": "tsx src/examples/postgres-demo.ts",
+    "bench": "tsx src/examples/benchmark-demo.ts",
+    "seed:sql": "node -e \"console.log('Apply sql/schema_v2.sql to your PostgreSQL database, then optionally run src/examples/postgres-demo.ts with DATABASE_URL set.')\"",
+    "graph": "tsx src/examples/graph-demo.ts",
+    "reviewer": "tsx src/examples/reviewer-demo.ts",
+    "report": "tsx src/examples/report-demo.ts",
+    "multimodal": "tsx src/examples/multimodal-demo.ts",
+    "dossier": "tsx src/examples/dossier-demo.ts",
+    "pdf": "tsx src/examples/dossier-demo.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.10.2"
+  }
+}

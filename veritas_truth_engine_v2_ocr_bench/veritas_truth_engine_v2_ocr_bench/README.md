@@ -1,0 +1,71 @@
+# Veritas Truth Engine v2 PostgreSQL Scaffold
+
+This package extends the Truth Engine v2 scaffold with a real PostgreSQL persistence adapter.
+
+What changed:
+
+- `pg` connection layer
+- `PostgresTruthEngineRepository`
+- persistence for `truth_assessments_v2`
+- automatic `review_queue` insertion for non-auto-release claims
+- fixed sample payloads and demo server field names
+- PostgreSQL demo script
+
+## Files added or upgraded
+
+- `src/lib/db.ts` — PostgreSQL pool helper
+- `src/lib/repository.ts` — in-memory and PostgreSQL repositories
+- `src/lib/service.ts` — assess + persist + review routing
+- `src/api/assess-claim.ts` — API handler with DB-aware persistence
+- `src/examples/postgres-demo.ts` — end-to-end persistence demo
+- `src/examples/sample-input.ts` — corrected ChronoScope-style example
+
+## Quick start
+
+```bash
+npm install
+npm run build
+npm run demo
+```
+
+## Run with PostgreSQL
+
+1. Create a PostgreSQL database.
+2. Apply `sql/schema_v2.sql`.
+3. Set `DATABASE_URL` in `.env` or your shell.
+4. Run:
+
+```bash
+npm run db:test
+```
+
+This will:
+- score the sample claim
+- insert a row into `truth_assessments_v2`
+- insert review queue rows when the release state is not `auto_release`
+
+## Environment
+
+See `.env.example`.
+
+## Recommended next production step
+
+Wire ingestion and claim extraction so this repository receives real claim packages instead of static sample input.
+
+
+## OCR + benchmark layer
+
+This package now includes:
+
+- OCR abstraction interfaces and heuristic OCR normalization
+- benchmark datasets and scoring metrics
+- calibration reporting (ECE, MCE, Brier score)
+- schema extensions for benchmark and calibration storage
+
+Run:
+
+```bash
+npm run bench
+```
+
+This prints a benchmark summary and calibration report for the included seed dataset.

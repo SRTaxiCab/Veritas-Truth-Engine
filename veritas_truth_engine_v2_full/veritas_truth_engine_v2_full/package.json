@@ -1,0 +1,17 @@
+
+{
+  "name": "veritas-truth-engine-v2-full",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "demo": "tsx src/examples/demo.ts",
+    "dev:ui": "tsx src/examples/server.ts",
+    "seed:sql": "node -e "console.log('Apply sql/schema_v2.sql to your PostgreSQL database.')""
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

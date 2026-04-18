@@ -1,0 +1,42 @@
+{
+  "name": "veritas-truth-engine-v2-consolidated",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "demo": "tsx src/examples/demo.ts",
+    "dev:ui": "tsx src/examples/server.ts",
+    "db:test": "tsx src/examples/postgres-demo.ts",
+    "bench": "tsx src/examples/benchmark-demo.ts",
+    "test": "tsx scripts/run-tests.ts",
+    "seed:sql": "node -e \"console.log('Apply sql/schema_v2.sql to your PostgreSQL database, then optionally run src/examples/postgres-demo.ts with DATABASE_URL set.')\"",
+    "graph": "tsx src/examples/graph-demo.ts",
+    "reviewer": "tsx src/examples/reviewer-demo.ts",
+    "report": "tsx src/examples/report-demo.ts",
+    "multimodal": "tsx src/examples/multimodal-demo.ts",
+    "dossier": "tsx src/examples/dossier-demo.ts",
+    "pdf": "tsx src/examples/dossier-demo.ts",
+    "ingest": "node -e \"console.log('Ingestion demo not present in this package')\"",
+    "verify:server": "tsx scripts/verify-server.ts",
+    "docker:config": "docker compose config",
+    "docker:build": "docker build -t veritas-truth-engine:local .",
+    "docker:up": "docker compose up --build",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/examples/server.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "playwright": "^1.59.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
