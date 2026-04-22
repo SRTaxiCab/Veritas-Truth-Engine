@@ -8,9 +8,9 @@ This layer converts adjudicated claims into publication-grade research outputs.
 - JSON
 - HTML
 
-## Purpose inside ChronoScope
+## Standalone Purpose
 
-ChronoScope needs to move from raw adjudication to researcher-facing artifacts that can be reviewed, archived, versioned, and eventually rendered into PDF.
+Veritas Engine needs to move from raw adjudication to researcher-facing artifacts that can be reviewed, archived, versioned, and eventually rendered into PDF.
 
 ## Current implementation
 

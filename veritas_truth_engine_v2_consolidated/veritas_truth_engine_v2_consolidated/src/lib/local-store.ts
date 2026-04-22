@@ -298,6 +298,25 @@ export class LocalVeritasStore implements ReviewRepository, EnterpriseRepository
     return user;
   }
 
+  async removeUser(userId: string): Promise<StoreUser> {
+    const tenant = this.activeTenant();
+    const tenantUsers = this.state.users.filter((item) => item.tenantId === tenant.id);
+    const user = tenantUsers.find((item) => item.id === userId);
+    if (!user) throw new Error(`User not found: ${userId}`);
+    if (tenantUsers.length <= 1) {
+      throw new Error("You cannot remove the last user in a tenant.");
+    }
+
+    this.state.users = this.state.users.filter((item) => item.id !== userId);
+    if (this.state.activeUserId === userId) {
+      this.state.activeUserId = this.state.users.find((item) => item.tenantId === tenant.id)!.id;
+    }
+
+    this.audit("user.remove", "user", user.id, `Removed user ${user.email}.`, { role: user.role });
+    this.save();
+    return user;
+  }
+
   async audit(action: string, resourceType: string, resourceId: string, summary: string, metadata: Record<string, unknown>): Promise<AuditLogEntry> {
     const tenant = this.activeTenant();
     const actor = this.activeUser();

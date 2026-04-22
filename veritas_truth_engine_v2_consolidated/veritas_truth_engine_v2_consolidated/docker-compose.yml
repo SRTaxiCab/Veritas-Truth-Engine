@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: veritas
       POSTGRES_PASSWORD: veritas_local_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - veritas-postgres:/var/lib/postgresql/data
       - ./sql/schema_enterprise.sql:/docker-entrypoint-initdb.d/001_schema_enterprise.sql:ro
@@ -24,6 +24,7 @@ services:
       DATABASE_URL: postgres://veritas:veritas_local_password@postgres:5432/veritas_truth_engine
       PGSSL: disable
       VERITAS_MAX_BODY_BYTES: 1000000
+      VERITAS_API_KEY: ${VERITAS_API_KEY:-veritas_local_dev_key_change_me}
     ports:
       - "3017:3017"
     depends_on:

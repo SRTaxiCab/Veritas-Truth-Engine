@@ -180,18 +180,44 @@ function num(value: number | undefined | null): string | null {
   return typeof value === "number" ? value.toFixed(4) : null;
 }
 
+function optionalEnvId(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 export class PostgresEnterpriseRepository implements EnterpriseRepository {
   readonly mode = "postgres" as const;
   private activeTenantId: string | null;
   private activeUserId: string | null;
 
   constructor(private readonly pool: Pool, options?: { activeTenantId?: string; activeUserId?: string }) {
-    this.activeTenantId = options?.activeTenantId ?? process.env.VERITAS_TENANT_ID ?? null;
-    this.activeUserId = options?.activeUserId ?? process.env.VERITAS_USER_ID ?? null;
+    this.activeTenantId = optionalEnvId(options?.activeTenantId ?? process.env.VERITAS_TENANT_ID);
+    this.activeUserId = optionalEnvId(options?.activeUserId ?? process.env.VERITAS_USER_ID);
   }
 
   isConfigured(): boolean {
     return Boolean(process.env.DATABASE_URL);
+  }
+
+  private async seedInitialUser(tenantRow: DbTenant): Promise<StoreUser> {
+    const result = await this.pool.query<DbUser>(
+      `
+      insert into tenant_users (tenant_id, email, display_name, role)
+      values ($1, $2, $3, 'admin')
+      on conflict (tenant_id, email) do update
+        set display_name = excluded.display_name, role = excluded.role, updated_at = now()
+      returning *
+      `,
+      [
+        tenantRow.id,
+        `admin@${tenantRow.slug}.local`,
+        `${tenantRow.name} Admin`,
+      ]
+    );
+    const created = user(result.rows[0]!);
+    this.activeTenantId = tenantRow.id;
+    this.activeUserId = created.id;
+    return created;
   }
 
   private async ensureContext(): Promise<{ tenant: Tenant; actor: StoreUser }> {
@@ -203,14 +229,25 @@ export class PostgresEnterpriseRepository implements EnterpriseRepository {
           [this.activeTenantId, this.activeUserId]
         );
         if (users.rows[0]) return { tenant: tenant(tenantResult.rows[0]), actor: user(users.rows[0]) };
+        const seeded = await this.seedInitialUser(tenantResult.rows[0]);
+        return { tenant: tenant(tenantResult.rows[0]), actor: seeded };
       }
     }
 
     const tenants = await this.pool.query<DbTenant>("select * from tenants order by created_at asc limit 1");
     if (!tenants.rows[0]) {
-      const created = await this.createTenant({ name: "Veritas Systems Internal", region: "us", plan: "enterprise" });
-      const state = await this.adminState();
-      return { tenant: created, actor: state.activeUser };
+      const created = await this.pool.query<DbTenant>(
+        `
+        insert into tenants (name, slug, plan, region)
+        values ($1, $2, $3, $4)
+        on conflict (slug) do update set name = excluded.name, updated_at = now()
+        returning *
+        `,
+        ["Veritas Systems Internal", "veritas-systems-internal", "enterprise", "us"]
+      );
+      const tenantRow = created.rows[0]!;
+      const seeded = await this.seedInitialUser(tenantRow);
+      return { tenant: tenant(tenantRow), actor: seeded };
     }
 
     this.activeTenantId = tenants.rows[0].id;
@@ -218,12 +255,8 @@ export class PostgresEnterpriseRepository implements EnterpriseRepository {
       this.activeTenantId,
     ]);
     if (!users.rows[0]) {
-      const createdUser = await this.createUser({
-        email: `admin@${tenants.rows[0].slug}.local`,
-        displayName: `${tenants.rows[0].name} Admin`,
-        role: "admin",
-      });
-      return { tenant: tenant(tenants.rows[0]), actor: createdUser };
+      const seeded = await this.seedInitialUser(tenants.rows[0]);
+      return { tenant: tenant(tenants.rows[0]), actor: seeded };
     }
 
     this.activeUserId = users.rows[0].id;
@@ -280,11 +313,7 @@ export class PostgresEnterpriseRepository implements EnterpriseRepository {
     );
     const created = tenant(result.rows[0]!);
     this.activeTenantId = created.id;
-    const admin = await this.createUser({
-      email: `admin@${created.slug}.local`,
-      displayName: `${created.name} Admin`,
-      role: "admin",
-    });
+    const admin = await this.seedInitialUser(result.rows[0]!);
     this.activeUserId = admin.id;
     await this.audit("tenant.create", "tenant", created.id, `Created tenant ${created.name}.`, {
       region: created.region,
@@ -332,6 +361,53 @@ export class PostgresEnterpriseRepository implements EnterpriseRepository {
     this.activeUserId = created.id;
     await this.audit("user.upsert", "user", created.id, `Upserted user ${created.email}.`, { role: created.role });
     return created;
+  }
+
+  async removeUser(userId: string): Promise<StoreUser> {
+    const ctx = await this.ensureContext();
+    const client = await this.pool.connect();
+    try {
+      await client.query("begin");
+      const existing = await client.query<DbUser>("select * from tenant_users where id = $1 and tenant_id = $2", [userId, ctx.tenant.id]);
+      if (!existing.rows[0]) {
+        throw new Error(`User not found: ${userId}`);
+      }
+
+      const users = await client.query<DbUser>("select * from tenant_users where tenant_id = $1 order by created_at asc", [ctx.tenant.id]);
+      if (users.rows.length <= 1) {
+        throw new Error("You cannot remove the last user in a tenant.");
+      }
+
+      await client.query("delete from tenant_users where id = $1 and tenant_id = $2", [userId, ctx.tenant.id]);
+      if (this.activeUserId === userId) {
+        this.activeUserId = users.rows.find((row) => row.id !== userId)?.id ?? null;
+      }
+
+      const removed = user(existing.rows[0]);
+      await client.query<DbAudit>(
+        `
+        insert into audit_log (tenant_id, actor_id, actor_email, action, resource_type, resource_id, summary, metadata)
+        values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
+        `,
+        [
+          ctx.tenant.id,
+          ctx.actor.id === removed.id ? null : ctx.actor.id,
+          ctx.actor.email,
+          "user.remove",
+          "user",
+          removed.id,
+          `Removed user ${removed.email}.`,
+          JSON.stringify({ role: removed.role }),
+        ]
+      );
+      await client.query("commit");
+      return removed;
+    } catch (error) {
+      await client.query("rollback");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async audit(action: string, resourceType: string, resourceId: string, summary: string, metadata: Record<string, unknown>): Promise<AuditLogEntry> {

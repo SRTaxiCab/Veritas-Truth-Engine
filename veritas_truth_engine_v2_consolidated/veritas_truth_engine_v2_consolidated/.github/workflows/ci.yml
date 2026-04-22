@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  check-build:
+  release-gates:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,3 +28,20 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Start server
+        run: |
+          npm run start > veritas-server.log 2> veritas-server.err.log &
+          echo $! > veritas-server.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3017/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat veritas-server.log || true
+          cat veritas-server.err.log || true
+          exit 1
+
+      - name: Server smoke verification
+        run: npm run verify:server

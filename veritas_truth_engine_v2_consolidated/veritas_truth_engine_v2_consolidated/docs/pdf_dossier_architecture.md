@@ -4,7 +4,7 @@ This phase adds a formal evidence dossier layer on top of the multimodal report 
 
 ## Purpose
 
-ChronoScope and the broader Veritas stack need a publication-grade dossier output that can be:
+Veritas Engine needs a publication-grade dossier output that can be:
 
 - reviewed internally,
 - archived as a release artifact,
@@ -61,4 +61,4 @@ The dossier is designed to be:
 
 ## Why this matters
 
-ChronoScope is not complete if it can only score and visualize. It must also emit a formal dossier that a human reviewer, historian, investigator, or downstream institution can inspect and archive.
+Veritas Engine is not complete if it can only score and visualize. It must also emit a formal dossier that a human reviewer, historian, investigator, or downstream institution can inspect and archive.

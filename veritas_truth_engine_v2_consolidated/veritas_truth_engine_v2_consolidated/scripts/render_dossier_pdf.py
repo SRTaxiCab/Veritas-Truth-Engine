@@ -58,6 +58,24 @@ def build_styles():
         textColor=colors.HexColor("#27384C"),
         spaceAfter=3,
     ))
+    styles.add(ParagraphStyle(
+        name="TableHeader",
+        parent=styles["BodyText"],
+        fontName="Helvetica-Bold",
+        fontSize=8.5,
+        leading=10,
+        textColor=colors.white,
+        spaceAfter=0,
+    ))
+    styles.add(ParagraphStyle(
+        name="TableCell",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=8.5,
+        leading=10,
+        textColor=colors.HexColor("#10243E"),
+        spaceAfter=0,
+    ))
     return styles
 
 def metadata_table(metadata, styles):
@@ -86,21 +104,30 @@ def metadata_table(metadata, styles):
     ]))
     return table
 
-def summary_table(records):
-    rows = [["Claim", "Truth State", "Score", "Release", "Evidence"]]
+def summary_table(records, styles):
+    rows = [[
+        Paragraph("Claim", styles["TableHeader"]),
+        Paragraph("Truth State", styles["TableHeader"]),
+        Paragraph("Score", styles["TableHeader"]),
+        Paragraph("Release", styles["TableHeader"]),
+        Paragraph("Evidence", styles["TableHeader"]),
+    ]]
     for record in records:
         rows.append([
-            record["claim"]["claimText"][:78],
-            record["assessment"]["truthState"],
-            f'{record["assessment"]["posteriorTruthScore"]:.3f}',
-            record["assessment"]["releaseState"],
-            str(len(record.get("evidence", []))),
+            Paragraph(record["claim"]["claimText"][:78], styles["TableCell"]),
+            Paragraph(record["assessment"]["truthState"], styles["TableCell"]),
+            Paragraph(f'{record["assessment"]["posteriorTruthScore"]:.3f}', styles["TableCell"]),
+            Paragraph(record["assessment"]["releaseState"], styles["TableCell"]),
+            Paragraph(str(len(record.get("evidence", []))), styles["TableCell"]),
         ])
-    table = Table(rows, colWidths=[3.25*inch, 1.0*inch, 0.6*inch, 1.0*inch, 0.55*inch], repeatRows=1)
+    table = Table(
+        rows,
+        colWidths=[3.05 * inch, 1.05 * inch, 0.65 * inch, 1.05 * inch, 0.95 * inch],
+        repeatRows=1,
+    )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#17365D")),
         ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
         ("FONTSIZE", (0,0), (-1,-1), 8.5),
         ("LEADING", (0,0), (-1,-1), 11),
         ("GRID", (0,0), (-1,-1), 0.35, colors.HexColor("#BAC7D4")),
@@ -142,7 +169,7 @@ def build_story(dossier):
     story.append(Spacer(1, 0.16 * inch))
 
     story.append(Paragraph("Claim Assessment Summary", styles["SectionHeader"]))
-    story.append(summary_table(dossier.get("records", [])))
+    story.append(summary_table(dossier.get("records", []), styles))
     story.append(PageBreak())
 
     for index, record in enumerate(dossier.get("records", []), start=1):

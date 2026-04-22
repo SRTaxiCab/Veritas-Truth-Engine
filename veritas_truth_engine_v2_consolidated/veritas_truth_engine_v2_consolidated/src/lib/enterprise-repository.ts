@@ -25,6 +25,7 @@ export interface EnterpriseRepository {
   createTenant(input: { name: string; region?: Tenant["region"]; plan?: Tenant["plan"] }): Promise<Tenant>;
   setActiveTenant(tenantId: string): Promise<Tenant>;
   createUser(input: { email: string; displayName: string; role: StoreUser["role"] }): Promise<StoreUser>;
+  removeUser(userId: string): Promise<StoreUser>;
   audit(action: string, resourceType: string, resourceId: string, summary: string, metadata: Record<string, unknown>): Promise<AuditLogEntry>;
   auditLog(): Promise<AuditLogEntry[]>;
   createJob(input: { type: JobType; title: string; payload: Record<string, unknown> }): Promise<EnterpriseJob>;

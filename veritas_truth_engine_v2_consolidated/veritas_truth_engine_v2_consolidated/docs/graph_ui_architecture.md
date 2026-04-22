@@ -30,9 +30,9 @@ The graph layer represents:
 - contradicts
 - temporal_order
 
-## ChronoScope relevance
+## Standalone Relevance
 
-ChronoScope is fundamentally a historical reconstruction platform. A contradiction graph is required to show:
+Veritas Engine is a historical reconstruction and claim-validation platform. A contradiction graph is required to show:
 
 - where the archival record aligns
 - where witness and institutional narratives diverge

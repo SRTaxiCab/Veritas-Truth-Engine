@@ -54,7 +54,7 @@ export default function TruthEngineGraphPage(): JSX.Element {
     <main style={{ padding: 24, fontFamily: "Inter, Arial, sans-serif", background: "#07111f", minHeight: "100vh", color: "#e5eefc" }}>
       <h1 style={{ margin: 0, fontSize: 32 }}>Truth Engine Graph View</h1>
       <p style={{ maxWidth: 920, color: "#b4c4df" }}>
-        This demo page shows the contradiction graph layer for ChronoScope-style historical adjudication.
+        This demo page shows the contradiction graph layer for standalone historical adjudication inside Veritas Engine.
         Claims, entities, and sources are rendered as distinct node classes so provenance and contradiction structure are visible at a glance.
       </p>
 

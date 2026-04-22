@@ -2,7 +2,7 @@
 
 ## Purpose
 
-ChronoScope needs to process scanned historical records, typed memos, low-quality photocopies, and image-derived archival pages. This package adds an OCR abstraction layer so the Truth Engine can normalize extracted text before chunking, claim extraction, and adjudication.
+Veritas Engine needs to process scanned historical records, typed memos, low-quality photocopies, and image-derived archival pages. This package adds an OCR abstraction layer so the Truth Engine can normalize extracted text before chunking, claim extraction, and adjudication.
 
 ## v2 OCR design
 

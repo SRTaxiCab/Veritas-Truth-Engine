@@ -75,9 +75,9 @@ Claims are not automatically promoted merely because their support score is high
 - revision stability
 - deception signal
 
-## Intended ChronoScope use
+## Intended Standalone Use
 
-ChronoScope should use Truth Engine v2 to:
+Veritas Engine should use Truth Engine v2 to:
 
 - reconstruct timeline events from claims
 - expose documentary revisions over time

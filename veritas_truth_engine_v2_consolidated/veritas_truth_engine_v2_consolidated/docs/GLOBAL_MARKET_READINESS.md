@@ -2,6 +2,14 @@
 
 This checklist tracks the work required to move Veritas Truth Engine from a strong local product build to a production-ready product for global enterprise markets.
 
+Execution plan:
+
+```text
+docs/GLOBAL_RELEASE_PLAN.md
+```
+
+Every major product, API, security, deployment, or operations change must update `docs/veritas_operations_manual.md` in the same change set.
+
 Status key:
 
 - `[x]` Complete for the current local/product baseline.
@@ -23,7 +31,7 @@ Status key:
 - [x] Unit smoke tests: `npm test`.
 - [x] Production build: `npm run build`.
 - [x] Running-server smoke test: `npm run verify:server`.
-- [x] CI workflow runs check, tests, and build.
+- [x] CI workflow runs check, tests, build, and running-server smoke verification.
 - [~] Browser checks are available through Playwright scripts used during development.
 - [ ] Browser end-to-end tests are committed as repeatable CI tests.
 
@@ -128,13 +136,16 @@ Status key:
 
 ## Immediate Next Milestones
 
-1. Fix Docker Desktop Linux backend and validate the full Compose stack.
-2. Add committed Playwright browser tests.
-3. Validate Postgres mode end to end and add integration tests.
-4. Replace API-key protection with real authentication and route-level authorization.
-5. Add durable background worker for ingestion and exports.
-6. Add migration tooling and database drift checks.
-7. Add log/metric export for staging.
+1. Add committed Playwright browser tests.
+2. Validate Docker build and the full Compose stack.
+3. Align PostgreSQL schemas and repositories for all active API routes.
+4. Validate Postgres mode end to end and add integration tests.
+5. Add tenant isolation tests.
+6. Move tenant/user context from process-global state to authenticated request context.
+7. Replace API-key protection with real authentication and route-level authorization.
+8. Add durable background worker for ingestion and exports.
+9. Add migration tooling and database drift checks.
+10. Add log/metric export for staging.
 
 ## Release Candidate Definition
 

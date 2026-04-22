@@ -26,6 +26,13 @@ export interface IngestDocumentResult {
   reviewCount: number;
 }
 
+export interface IngestBufferRequest {
+  title: string;
+  buffer: Buffer;
+  mimeType?: SupportedDocumentType;
+  publicImpact?: boolean;
+}
+
 function requestBuffer(request: IngestDocumentRequest): Buffer {
   if (request.base64Content) {
     return Buffer.from(request.base64Content, "base64");
@@ -66,18 +73,56 @@ function buildEvidenceBundle(
   };
 }
 
+function positiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(1, Math.floor(parsed));
+}
+
 export class DocumentIngestionService {
+  private readonly maxCandidatesPerDocument: number;
+  private readonly chunkTargetSize: number;
+  private readonly chunkOverlap: number;
+
+  constructor(options: {
+    maxCandidatesPerDocument?: number;
+    chunkTargetSize?: number;
+    chunkOverlap?: number;
+  } = {}) {
+    this.maxCandidatesPerDocument = Math.max(
+      1,
+      options.maxCandidatesPerDocument ?? positiveInteger(process.env.VERITAS_MAX_CLAIMS_PER_DOCUMENT, 250)
+    );
+    this.chunkTargetSize = Math.max(400, options.chunkTargetSize ?? positiveInteger(process.env.VERITAS_CHUNK_TARGET_SIZE, 1200));
+    this.chunkOverlap = Math.max(40, options.chunkOverlap ?? positiveInteger(process.env.VERITAS_CHUNK_OVERLAP, 120));
+  }
+
   ingest(request: IngestDocumentRequest): IngestDocumentResult {
+    return this.ingestBuffer({
+      title: request.title?.trim() || "Untitled Document",
+      mimeType: request.mimeType ?? "text/plain",
+      publicImpact: request.publicImpact,
+      buffer: requestBuffer(request),
+    });
+  }
+
+  ingestBuffer(request: IngestBufferRequest): IngestDocumentResult {
     const mimeType = request.mimeType ?? "text/plain";
     const title = request.title?.trim() || "Untitled Document";
-    const document = parseDocumentBuffer(requestBuffer(request), mimeType, title);
-
+    const document = parseDocumentBuffer(request.buffer, mimeType, title);
     if (!document.contentText) {
       throw new Error("No extractable document text was found.");
     }
 
-    const chunks = chunkText(document.contentText);
-    const candidates = chunks.flatMap((chunk) => extractClaimCandidatesFromChunk(chunk)).slice(0, 12);
+    const chunks = chunkText(document.contentText, this.chunkTargetSize, this.chunkOverlap);
+    const candidates: ExtractionCandidate[] = [];
+    for (const chunk of chunks) {
+      for (const candidate of extractClaimCandidatesFromChunk(chunk)) {
+        candidates.push(candidate);
+        if (candidates.length >= this.maxCandidatesPerDocument) break;
+      }
+      if (candidates.length >= this.maxCandidatesPerDocument) break;
+    }
     const claims = candidates.map((candidate) => candidateToClaim(candidate, Boolean(request.publicImpact)));
     const relations = deriveClaimRelations(claims);
 

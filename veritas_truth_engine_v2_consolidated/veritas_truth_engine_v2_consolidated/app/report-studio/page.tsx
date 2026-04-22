@@ -3,7 +3,7 @@ export default function ReportStudioPage() {
     <main style={{ padding: 24, fontFamily: "Arial, sans-serif" }}>
       <h1>Truth Engine Report Studio</h1>
       <p>
-        This workspace packages assessed claims into ChronoScope-ready evidence reports with
+        This workspace packages assessed claims into standalone Veritas evidence reports with
         markdown, JSON, and HTML exports.
       </p>
 

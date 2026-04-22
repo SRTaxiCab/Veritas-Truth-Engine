@@ -82,6 +82,10 @@ export async function buildDemoReviewerWorkspace() {
   return buildWorkspaceSnapshot(repo);
 }
 
+export async function reviewerWorkspaceHandler() {
+  return buildWorkspaceSnapshot(getEnterpriseRepository());
+}
+
 export async function applyReviewActionHandler(payload: {
   taskId: string;
   reviewer?: string;

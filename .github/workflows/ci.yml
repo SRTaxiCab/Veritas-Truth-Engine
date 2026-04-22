@@ -1,0 +1,52 @@
+name: Veritas CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  release-gates:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: veritas_truth_engine_v2_consolidated/veritas_truth_engine_v2_consolidated
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: veritas_truth_engine_v2_consolidated/veritas_truth_engine_v2_consolidated/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run check
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Start server
+        run: |
+          npm run start > veritas-server.log 2> veritas-server.err.log &
+          echo $! > veritas-server.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3017/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat veritas-server.log || true
+          cat veritas-server.err.log || true
+          exit 1
+
+      - name: Server smoke verification
+        run: npm run verify:server
+

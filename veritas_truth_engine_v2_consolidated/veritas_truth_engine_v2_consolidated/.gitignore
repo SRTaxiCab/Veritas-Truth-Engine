@@ -1,0 +1,18 @@
+# Generated runtime state
+.dev-server*.log
+veritas-server.*.log
+
+# Local auth/runtime stores
+data/veritas-auth-store.json
+
+# Generated verification and scratch outputs
+viewer.html
+veritas-*-check.png
+
+# Generated exports
+artifacts/*.pdf
+artifacts/*.html
+
+# Bulk-ingestion working files
+automation/inbox/*
+!automation/inbox/.gitkeep

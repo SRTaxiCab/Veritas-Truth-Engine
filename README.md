@@ -42,6 +42,12 @@ http://localhost:3017
 
 The consolidated package expects Node.js `>=22 <23` and npm `>=10`.
 
+For active local development with automatic server restart and browser refresh:
+
+```bash
+npm run dev:ui:watch
+```
+
 ## Useful Scripts
 
 Run these from the consolidated package directory.
@@ -111,9 +117,10 @@ docs/veritas_operations_manual.md
 docs/veritas_operations_manual.pdf
 docs/DEPLOYMENT_RUNBOOK.md
 docs/GLOBAL_MARKET_READINESS.md
+docs/GLOBAL_RELEASE_PLAN.md
 docs/truth_engine_v2_spec.md
 ```
 
 ## Project Status
 
-This repository is an engineering scaffold for Veritas Truth Engine development. The consolidated package is the cleanest base for continued production hardening, deployment work, and integration with broader ChronoScope-style intelligence workflows.
+This repository is an engineering scaffold for Veritas Truth Engine development. The consolidated package is the cleanest base for continued production hardening, deployment work, and eventual downstream integrations once Veritas Engine is fully standalone and production-ready.

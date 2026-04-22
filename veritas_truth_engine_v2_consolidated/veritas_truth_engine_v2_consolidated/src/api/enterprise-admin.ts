@@ -66,3 +66,15 @@ export async function createUserHandler(payload: {
     state: await getEnterpriseRepository().adminState(),
   };
 }
+
+export async function removeUserHandler(payload: { userId: string }) {
+  if (!payload.userId?.trim()) {
+    throw new Error("userId is required.");
+  }
+
+  return {
+    ok: true,
+    user: await getEnterpriseRepository().removeUser(payload.userId.trim()),
+    state: await getEnterpriseRepository().adminState(),
+  };
+}

@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { getIngestionHandler, listIngestionHistoryWithQuery, listJobsWithQuery } from "../src/api/ingest-document.js";
 import { evaluateClaimV2 } from "../src/core/truth-engine-v2.js";
 import { sampleInput } from "../src/examples/sample-input.js";
 import { DocumentIngestionService } from "../src/lib/document-ingestion-service.js";
+import { localVeritasStore } from "../src/lib/local-store.js";
 import { buildEvidenceDossierDocument } from "../src/reports/dossier-builder.js";
+import { evaluateExternalReleaseGate } from "../src/api/release-gates.js";
 
 type TestCase = {
   name: string;
@@ -66,6 +69,61 @@ const tests: TestCase[] = [
     },
   },
   {
+    name: "ingestion history supports text and release-state filtering",
+    run: async () => {
+      const service = new DocumentIngestionService();
+      const releasePacket = service.ingest({
+        title: "May Release Packet",
+        mimeType: "text/plain",
+        content: "The archive release was approved in May and operations resumed after the signed authorization was filed.",
+      });
+      const disputedPacket = service.ingest({
+        title: "Disputed Approval Packet",
+        mimeType: "text/plain",
+        content:
+          "The archive release was approved in May. The compliance memo stated the archive release was not approved until July.",
+        publicImpact: true,
+      });
+
+      await localVeritasStore.saveIngestion(releasePacket);
+      await localVeritasStore.saveIngestion(disputedPacket);
+
+      const byText = await listIngestionHistoryWithQuery({ q: "disputed approval" });
+      assert.ok(byText.ingestions.length >= 1);
+      assert.equal(byText.ingestions[0]?.document.title, "Disputed Approval Packet");
+
+      const gated = await listIngestionHistoryWithQuery({ releaseState: "review_required" });
+      assert.ok(gated.ingestions.some((item) => item.document.title === "Disputed Approval Packet"));
+    },
+  },
+  {
+    name: "job history supports status filtering and ingestion lookup returns full record",
+    run: async () => {
+      const queued = await localVeritasStore.createJob({
+        type: "document_ingestion",
+        title: "Queued packet import",
+        payload: { source: "test" },
+      });
+      await localVeritasStore.updateJob(queued.id, {
+        status: "completed",
+        progress: 100,
+        completedAt: new Date().toISOString(),
+        result: { documentId: "doc_test" },
+      });
+
+      const completed = await listJobsWithQuery({ status: "completed", q: "packet import" });
+      assert.ok(completed.jobs.some((job) => job.id === queued.id));
+
+      const history = await listIngestionHistoryWithQuery({ q: "Disputed Approval Packet", limit: 1 });
+      const documentId = history.ingestions[0]?.document.id;
+      assert.ok(documentId);
+
+      const single = await getIngestionHandler(documentId!);
+      assert.equal(single.ingestion.document.id, documentId);
+      assert.ok(single.ingestion.claimPackages.length >= 1);
+    },
+  },
+  {
     name: "dossier builder preserves chain of custody and release recommendation",
     run: () => {
       const assessment = evaluateClaimV2(sampleInput);
@@ -75,7 +133,7 @@ const tests: TestCase[] = [
           title: "Automated Test Dossier",
           createdAt: new Date().toISOString(),
           generatedBy: "veritas-test-suite",
-          product: "ChronoScope",
+          product: "Veritas Engine",
           classification: "Internal Analytical Use",
           subject: "Automated verification",
         },
@@ -94,6 +152,44 @@ const tests: TestCase[] = [
       assert.ok(dossier.chainOfCustodyNotes.length >= 1);
       assert.ok(dossier.releaseRecommendation.length > 0);
       assert.ok(dossier.provenance.nodes.length >= 1);
+    },
+  },
+  {
+    name: "external release gate blocks hold and review-required records",
+    run: () => {
+      const assessment = evaluateClaimV2(sampleInput);
+      const baseRecord = {
+        claim: sampleInput.claim,
+        assessment,
+        evidence: sampleInput.evidence,
+        reviewTasks: [],
+      };
+
+      const holdDecision = evaluateExternalReleaseGate([
+        {
+          ...baseRecord,
+          assessment: { ...assessment, releaseState: "hold" },
+        },
+      ]);
+      assert.equal(holdDecision.eligible, false);
+      assert.equal(holdDecision.holdCount, 1);
+
+      const reviewDecision = evaluateExternalReleaseGate([
+        {
+          ...baseRecord,
+          assessment: { ...assessment, releaseState: "review_required" },
+        },
+      ]);
+      assert.equal(reviewDecision.eligible, false);
+      assert.equal(reviewDecision.reviewRequiredCount, 1);
+
+      const autoReleaseDecision = evaluateExternalReleaseGate([
+        {
+          ...baseRecord,
+          assessment: { ...assessment, releaseState: "auto_release" },
+        },
+      ]);
+      assert.equal(autoReleaseDecision.eligible, true);
     },
   },
 ];

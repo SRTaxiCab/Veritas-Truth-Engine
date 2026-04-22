@@ -66,12 +66,13 @@ npm run docker:build
 Run with local storage:
 
 ```powershell
-docker run --rm -p 3017:3017 -e VERITAS_REPOSITORY=local veritas-truth-engine
+docker run --rm -p 3017:3017 -e VERITAS_REPOSITORY=local veritas-truth-engine:local
 ```
 
 Run the app with PostgreSQL using Docker Compose:
 
 ```powershell
+$env:VERITAS_API_KEY="<shared local key>"
 npm run docker:up
 ```
 
@@ -96,6 +97,7 @@ Core variables used by the repo:
 - `VERITAS_MAX_BODY_BYTES`: request body limit for JSON and document-ingestion requests.
 - `VERITAS_BASE_URL`: base URL used by verification scripts.
 - `VERITAS_VERIFY_TIMEOUT_MS`: per-request timeout used by `npm run verify:server`.
+- `VERITAS_ASSESSMENT_REPOSITORY`: optional legacy switch. Set to `legacy-postgres` only when the legacy `truth_assessments_v2` schema is applied and standalone `/api/assess` persistence is required.
 
 ## 4. Schema Application
 
@@ -120,6 +122,8 @@ psql "$env:DATABASE_URL" -f sql/schema_enterprise.sql
 ```
 
 After schema application, restart the app and confirm the repository reports the intended mode.
+
+In enterprise PostgreSQL mode, ingestion and dossier workflows persist through `sql/schema_enterprise.sql`. The standalone `/api/assess` endpoint evaluates claims without writing to legacy `truth_assessments_v2` tables unless `VERITAS_ASSESSMENT_REPOSITORY=legacy-postgres` is explicitly set and the legacy schema is present.
 
 ## 5. Health Checks
 
@@ -155,6 +159,8 @@ npm run verify:server
 ```
 
 The browser UI stores the key locally in the user's browser from the Enterprise control plane. This keeps authenticated local operations usable without embedding the key in the page source.
+
+Docker Compose sets `VERITAS_API_KEY` from the host environment and falls back to `veritas_local_dev_key_change_me` for local-only runs. Replace that fallback for any shared, staged, or externally reachable environment.
 
 ## 6. Backup and Restore
 

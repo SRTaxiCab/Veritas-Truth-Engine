@@ -46,10 +46,10 @@ const record: ClaimReportRecord = {
 const response = exportReport({
   metadata: {
     reportId: "rpt_demo_001",
-    title: "ChronoScope Evidence Adjudication Report",
+    title: "Veritas Evidence Adjudication Report",
     createdAt: new Date().toISOString(),
     generatedBy: "Truth Engine v2.6.0",
-    product: "ChronoScope",
+    product: "Veritas Engine",
     classification: "Internal Research Use",
     subject: "Historical event reconstruction demo",
   },

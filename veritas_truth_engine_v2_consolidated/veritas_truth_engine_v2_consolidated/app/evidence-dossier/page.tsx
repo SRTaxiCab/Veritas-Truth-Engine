@@ -7,7 +7,7 @@ export default function EvidenceDossierPage() {
     <main style={{ fontFamily: "Arial, sans-serif", padding: "2rem", maxWidth: 1100, margin: "0 auto" }}>
       <h1>Evidence Dossier Studio</h1>
       <p>
-        This workspace previews the provenance-first dossier output for ChronoScope.
+        This workspace previews the provenance-first dossier output for Veritas Engine.
       </p>
 
       <section style={{ border: "1px solid #d3dbe5", borderRadius: 12, padding: "1rem", marginBottom: "1rem", background: "#f8fbff" }}>

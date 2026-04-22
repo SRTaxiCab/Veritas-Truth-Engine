@@ -7,11 +7,11 @@ import { sampleClaimReportRecords } from "./sample-report-records.js";
 async function main() {
   const dossier = buildEvidenceDossierDocument(
     {
-      reportId: "chronoscope-dossier-demo",
-      title: "ChronoScope Evidence Dossier Demo",
+      reportId: "veritas-dossier-demo",
+      title: "Veritas Evidence Dossier Demo",
       createdAt: new Date().toISOString(),
       generatedBy: "dossier-demo",
-      product: "ChronoScope",
+      product: "Veritas Engine",
       classification: "Internal Analytical Use",
       subject: "Operation Lantern",
     },
@@ -20,7 +20,7 @@ async function main() {
 
   const outDir = path.resolve(process.cwd(), "artifacts");
   fs.mkdirSync(outDir, { recursive: true });
-  const outputPath = path.join(outDir, "chronoscope-evidence-dossier-demo.pdf");
+  const outputPath = path.join(outDir, "veritas-evidence-dossier-demo.pdf");
   const result = exportEvidenceDossierAsPdf(dossier, outputPath);
 
   console.log(JSON.stringify({

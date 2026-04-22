@@ -4,7 +4,7 @@ This phase adds a lightweight entity resolution layer to the Truth Engine.
 
 ## Purpose
 
-ChronoScope cannot reconstruct historical truth at scale if every alias is treated as a new actor. The entity resolution layer:
+Veritas Engine cannot reconstruct historical truth at scale if every alias is treated as a new actor. The entity resolution layer:
 
 - normalizes surface forms
 - clusters aliases into canonical entities

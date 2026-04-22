@@ -2,7 +2,7 @@
 
 ## Why this matters
 
-A truth engine without measurement is only a narrative. ChronoScope needs quantitative validation so Veritas can defend:
+A truth engine without measurement is only a narrative. Veritas Engine needs quantitative validation so it can defend:
 
 - truth-state assignments
 - posterior score ranges
@@ -29,7 +29,7 @@ This package adds:
 4. Adjust priors, penalties, and release thresholds.
 5. Re-run until performance is stable.
 
-## ChronoScope-specific benchmark categories
+## Standalone Benchmark Categories
 
 - archival record conflict
 - witness vs institutional record conflict

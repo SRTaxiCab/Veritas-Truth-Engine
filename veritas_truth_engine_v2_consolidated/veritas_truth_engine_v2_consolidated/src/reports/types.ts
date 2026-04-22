@@ -16,7 +16,7 @@ export interface ReportMetadata {
   title: string;
   createdAt: string;
   generatedBy: string;
-  product: "ChronoScope" | "Rediscover.ai" | "DeceptionOS" | "Veritas Engine";
+  product: "Veritas Engine" | "Rediscover.ai" | "DeceptionOS" | "External Integration";
   classification?: string;
   subject?: string;
 }

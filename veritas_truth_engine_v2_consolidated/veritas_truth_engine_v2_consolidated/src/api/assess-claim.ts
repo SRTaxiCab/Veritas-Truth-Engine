@@ -6,14 +6,19 @@ import { TruthEngineService } from "../lib/service.js";
 
 export async function assessClaimHandler(payload: EvaluateClaimInput) {
   const connectionString = process.env.DATABASE_URL;
+  const useLegacyAssessmentRepository =
+    Boolean(connectionString) &&
+    process.env.VERITAS_REPOSITORY !== "postgres" &&
+    process.env.VERITAS_ASSESSMENT_REPOSITORY === "legacy-postgres";
 
-  if (!connectionString) {
+  if (!useLegacyAssessmentRepository) {
     const assessment = evaluateClaimV2(payload);
     return {
       status: 200,
       body: {
         ok: true,
         persisted: false,
+        repositoryMode: process.env.VERITAS_REPOSITORY ?? "local",
         assessment,
       },
     };
